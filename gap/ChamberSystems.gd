@@ -73,5 +73,6 @@ DeclareAttribute( "IncidenceStructureOfChamberSystem", IsChamberSystem );
 
 DeclareOperation( "QuotientChamberSystem", [ IsChamberSystem, IsGroup ] );
 
-DeclareGlobalFunction( "PhiTypeSet" );
-DeclareOperation( "TwistingCosetChamberSystem", [ IsChamberSystem, IsChamberSystem, IsGroupHomomorphism, IsList ] );
+DeclareOperation( "PhiTypeSet", [ IsCosetChamberSystem, IsCosetChamberSystem, IsGroupHomomorphism ] );
+DeclareOperation( "IsIPOAdmissibleTwisting", [ IsCosetChamberSystem, IsGroupHomomorphism, IsList, IsGroupHomomorphism ] );
+DeclareOperation( "TwistingCosetChamberSystem", [ IsCosetChamberSystem, IsCosetChamberSystem, IsGroupHomomorphism, IsList ] );

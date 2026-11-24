@@ -502,7 +502,7 @@ end );
 
 ### I NEED TO DEAL WITH TYPES NOT >1 ... PROBLEM IN AUTOMORPHISM GROUP AND NOW HERE ###
 
-InstallGlobalFunction( PhiTypeSet,
+InstallMethod( PhiTypeSet, [IsCosetChamberSystem, IsCosetChamberSystem, IsGroupHomomorphism],
     function(C_a, C_b, phi)
     local SizeTypes, aut, gens_g_As_Action, collect_g_gens, SymGroup, g, g_gen, maxP_type, sent_type;
     SizeTypes := Size( C_a!.types);
@@ -536,12 +536,26 @@ InstallGlobalFunction( PhiTypeSet,
     return [Orbits(Subgroup(SymGroup, gens_g_As_Action)) , collect_g_gens];
 end );
 
-#BindGlobal( "IsAdmissibleTwisting" , [IsChamberSystem, IsChamberSystem, IsGroupHomomorphism, IsList] 
-#    function(C_a, C_b, phi, F_set)
-#    TODO
-#end);
+InstallMethod( IsIPOAdmissibleTwisting, [IsCosetChamberSystem, IsGroupHomomorphism, IsList, IsGroupHomomorphism], 
+    function(C_b, phi, F_set, b_gens_to_perms)
+        local rep, J, K, O_J, O_K;
+        for rep in F_set do
+            for J in Combinations( [1 .. Size(C_b!.types)]) do
+                O_J := Orbit(Image(b_gens_to_perms, Subgroup(C_b!.group, Flat(List(J, x -> GeneratorsOfGroup(C_b!.subgroups[x]))))), rep);
+                for K in Combinations( [1 .. Size(C_b!.types)]) do
+                    if J <> K then 
+                    O_K := Orbit(Image(b_gens_to_perms, Subgroup(C_b!.group, Flat(List(K, x -> GeneratorsOfGroup(C_b!.subgroups[x]))))), rep);
+                        if Size( Intersection( O_J, O_K ) ) <> Size( Orbit(Image(b_gens_to_perms, Subgroup(C_b!.group, Flat(List(Intersection(J,K), x -> GeneratorsOfGroup(C_b!.subgroups[x]))))), rep) ) then
+                            return Error("The twisting is not IPO-admissible. Choose a different set of representatives");
+                        fi;
+                    fi;
+                od;
+            od;
+        od;
+        return true;
+    end);
 
-InstallMethod( TwistingCosetChamberSystem, [IsChamberSystem, IsChamberSystem, IsGroupHomomorphism, IsList], 
+InstallMethod( TwistingCosetChamberSystem, [IsCosetChamberSystem, IsCosetChamberSystem, IsGroupHomomorphism, IsList], 
     function(C_a, C_b, phi, F_set)
     local new_subgroups, phi_set, new_types, b_gens_to_perms, G, B, borel_im, i, rep, l;
     if not IsCosetChamberSystem(C_a) or not IsCosetChamberSystem(C_b) then
@@ -553,6 +567,7 @@ InstallMethod( TwistingCosetChamberSystem, [IsChamberSystem, IsChamberSystem, Is
     phi_set := PhiTypeSet(C_a, C_b, phi);
     new_types := Union(List(phi_set[1] , x -> ["a", x]), List(C_b!.types, x -> ["b", x]));
     b_gens_to_perms := GroupHomomorphismByImages(C_b!.group, SymmetricGroup(C_a!.types), GeneratorsOfGroup(C_b!.group), phi_set[2]);
+    IsIPOAdmissibleTwisting(C_b, phi, F_set, b_gens_to_perms);
     G := SemidirectProduct(C_b!.group, phi, C_a!.group);
     B := Subgroup(G, Union(GeneratorsOfGroup(C_b!.borel), GeneratorsOfGroup(C_a!.borel)));
     borel_im := Image(b_gens_to_perms, C_b!.borel);
@@ -571,7 +586,6 @@ InstallMethod( TwistingCosetChamberSystem, [IsChamberSystem, IsChamberSystem, Is
     od;
     Print("New Types: \n");
     for i in [1 .. Size(new_types)] do
-
         Print("Type ",new_types[i][2], " of ", new_types[i][1], " -> ", i, "\n");
     od;
     return CosetChamberSystem( G, B, new_subgroups, [1 .. Size(new_types)] );
