@@ -31,10 +31,19 @@ SetInfoLevel( InfoChamberSystem, 1 );
 
 DeclareCategory( "IsChamberSystem", IsObject );
 DeclareCategory( "IsCosetChamberSystem", IsChamberSystem );
+DeclareCategory( "IsChamberSystemGraph", IsObject );
 
 DeclareRepresentation( "IsChamberSystemRep",
     IsComponentObjectRep and IsAttributeStoringRep,
     [ "elements", "adjacency", "types" ] );
+
+DeclareRepresentation( "IsCosetChamberSystemRep",
+    IsComponentObjectRep and IsAttributeStoringRep,
+    [ "elements", "adjacency", "types", "group", "borel", "subgroups" ] );
+
+DeclareRepresentation( "IsChamberSystemGraphRep",
+    IsComponentObjectRep and IsAttributeStoringRep,
+    [ "graph", "elements", "types" ] );
 
 DeclareGlobalFunction( "IsElementOfChamberSystem" );
 DeclareGlobalFunction( "IsTypeOfChamberSystem" );
@@ -62,3 +71,7 @@ DeclareOperation( "CellOfChamberSystem", [ IsChamberSystem, IsObject, IsList ] )
 DeclareOperation( "ObjectOfChamberSystem", [ IsChamberSystem, IsObject, IsObject ] );
 DeclareAttribute( "IncidenceStructureOfChamberSystem", IsChamberSystem );
 
+DeclareOperation( "QuotientChamberSystem", [ IsChamberSystem, IsGroup ] );
+
+DeclareGlobalFunction( "PhiTypeSet" );
+DeclareOperation( "TwistingCosetChamberSystem", [ IsChamberSystem, IsChamberSystem, IsGroupHomomorphism, IsList ] );
