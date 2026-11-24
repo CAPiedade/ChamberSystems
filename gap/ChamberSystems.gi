@@ -319,16 +319,27 @@ end );
 
 InstallMethod( IsResiduallyConnectedChamberSystem, [ IsCosetChamberSystem ],
     function(C)
-    local J, K, L, G_J, G_K, G_L;
-    for J in Combinations( [1..Size(C!.types)] ) do
-        G_J := Subgroup( C!.group, Concatenation(List(C!.subgroups{J} , x -> GeneratorsOfGroup(x) )));
-        for K in Combinations( [1..Size(C!.types)] ) do
-            G_K := Subgroup( C!.group, Concatenation(List(C!.subgroups{K} , x -> GeneratorsOfGroup(x) )));
-            for L in Combinations( [1..Size(C!.types)] ) do
-                G_L := Subgroup( C!.group, Concatenation(List(C!.subgroups{L} , x -> GeneratorsOfGroup(x) )));
-                if Size( RightCosetsNC( G_J, Intersection(G_K, G_L) ) )
-                   <> Size( Intersection( RightCosetsNC(G_J, G_K),
-                                          RightCosetsNC(G_J, G_L) ) ) then
+    local G, Gs, G_of, Js, L, J, K, G_L, G_J, G_K, G_JL, G_JK, G_JK_GJL, G_K_G_L;
+    Js := Combinations( [1..Size(C!.types)] );
+    Gs := List( Js, function(S)
+        if IsEmpty(S) then
+            return C!.borel;
+        fi;
+        return Subgroup( C!.group,
+            Concatenation( List( C!.subgroups{S}, GeneratorsOfGroup ) ) );
+    end );
+    G_of := S -> Gs[ Position( Js, S ) ];
+    for L in Js do
+        G_L := G_of(L);
+        for J in Js do
+            G_J := G_of(J);
+            G_JL := G_of( Intersection(J, L) );
+            for K in Js do
+                G_K := G_of(K);
+                G_JK := G_of( Intersection(J, K) );
+                G_JK_GJL := Filtered( RightCosets(C!.group, G_JL), rc ->  Size(Intersection(rc, G_JK)) > 0);
+                G_K_G_L := Filtered( RightCosets(C!.group, G_L), rc -> Size(Intersection(rc, G_K)) > 0);
+                if Size(Intersection(G_J ,Flat(List(G_K_G_L, x -> List(x))))) <> Size(Flat(List(G_JK_GJL, x -> List(x)))) then
                     return false;
                 fi;
             od;
@@ -569,7 +580,8 @@ InstallMethod( TwistingCosetChamberSystem, [IsCosetChamberSystem, IsCosetChamber
     b_gens_to_perms := GroupHomomorphismByImages(C_b!.group, SymmetricGroup(C_a!.types), GeneratorsOfGroup(C_b!.group), phi_set[2]);
     IsIPOAdmissibleTwisting(C_b, phi, F_set, b_gens_to_perms);
     G := SemidirectProduct(C_b!.group, phi, C_a!.group);
-    B := Subgroup(G, Union(GeneratorsOfGroup(C_b!.borel), GeneratorsOfGroup(C_a!.borel)));
+    B := Subgroup(G, Union(Image(Embedding(G, 1), GeneratorsOfGroup(C_b!.borel)),
+                           Image(Embedding(G, 2), GeneratorsOfGroup(C_a!.borel))));
     borel_im := Image(b_gens_to_perms, C_b!.borel);
     new_subgroups := [];
     for i in new_types do
