@@ -319,27 +319,46 @@ end );
 
 InstallMethod( IsResiduallyConnectedChamberSystem, [ IsCosetChamberSystem ],
     function(C)
-    local G, Gs, G_of, Js, L, J, K, G_L, G_J, G_K, G_JL, G_JK, G_JK_GJL, G_K_G_L;
-    Js := Combinations( [1..Size(C!.types)] );
+    local G, Js, Gs, n, pos, iL, iJ, iK, J, K, L, G_L, G_J, G_JK, G_JL,
+          act, base, orbs, orb_of, expected;
+    G  := C!.group;
+    n  := Size( C!.types );
+    Js := Combinations( [1..n] );
+    pos := function(S) return Position( Js, S ); end;
     Gs := List( Js, function(S)
         if IsEmpty(S) then
             return C!.borel;
         fi;
-        return Subgroup( C!.group,
+        return Subgroup( G,
             Concatenation( List( C!.subgroups{S}, GeneratorsOfGroup ) ) );
     end );
-    G_of := S -> Gs[ Position( Js, S ) ];
-    for L in Js do
-        G_L := G_of(L);
-        for J in Js do
-            G_J := G_of(J);
-            G_JL := G_of( Intersection(J, L) );
-            for K in Js do
-                G_K := G_of(K);
-                G_JK := G_of( Intersection(J, K) );
-                G_JK_GJL := Filtered( RightCosets(C!.group, G_JL), rc ->  Size(Intersection(rc, G_JK)) > 0);
-                G_K_G_L := Filtered( RightCosets(C!.group, G_L), rc -> Size(Intersection(rc, G_K)) > 0);
-                if Size(Intersection(G_J ,Flat(List(G_K_G_L, x -> List(x))))) <> Size(Flat(List(G_JK_GJL, x -> List(x)))) then
+    for iL in [1 .. Length(Js)] do
+        L := Js[iL];
+        G_L := Gs[iL];
+        act := function( c, g ) return CanonicalRightCosetElement( G_L, c*g ); end;
+        base := CanonicalRightCosetElement( G_L, One(G) );
+        orbs := [];
+        orb_of := function( i )
+            if not IsBound( orbs[i] ) then
+                orbs[i] := Set( Orbit( Gs[i], base, act ) );
+            fi;
+            return orbs[i];
+        end;
+        for iJ in [1 .. Length(Js)] do
+            J := Js[iJ];
+            if IsSubset( J, L ) then
+                continue;
+            fi;
+            G_J  := Gs[iJ];
+            G_JL := Gs[ pos( Intersection(J, L) ) ];
+            for iK in [iL + 1 .. Length(Js)] do
+                K := Js[iK];
+                if IsSubset( J, K ) or IsSubset( L, K ) or IsSubset( K, L ) then
+                    continue;
+                fi;
+                G_JK := Gs[ pos( Intersection(J, K) ) ];
+                expected := Size(G_JK) / Size( Intersection( G_JK, G_JL ) );
+                if Size( Intersection( orb_of(iJ), orb_of(iK) ) ) <> expected then
                     return false;
                 fi;
             od;
