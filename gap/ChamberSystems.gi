@@ -280,8 +280,10 @@ end );
 
 InstallMethod( CellOfChamberSystem, [ IsChamberSystem, IsObject, IsList ],
     function(C, x, J)
+    local elements;
     ChamberSystemCheckElement(C, x);
-    return CellOfChamberSystemForSet( C, [x], J );
+    elements := CellOfChamberSystemForSet( C, [x], J );
+    return ChamberSystem(elements, List(J, x -> Filtered(EquivalenceRelationPartition( C!.adjacency[x] ), y -> y[1] in elements)), J);
 end );
 
 InstallMethod( ObjectOfChamberSystem, [ IsChamberSystem, IsObject, IsObject ],
@@ -298,12 +300,12 @@ InstallMethod( IsResiduallyConnectedChamberSystem, [ IsChamberSystem ],
     local x, L, J, K, Lcell, Jcell, JKcell, LcapJcell, LcapJ_LcapKcell;
     for x in C!.elements do
         for L in Combinations( C!.types ) do
-            Lcell := CellOfChamberSystem( C, x, L );
+            Lcell := CellOfChamberSystem( C, x, L )!.elements;
             for J in Combinations( C!.types ) do
-                Jcell := CellOfChamberSystem( C, x, J );
+                Jcell := CellOfChamberSystem( C, x, J )!.elements;
                 for K in Combinations( C!.types ) do
                     JKcell := CellOfChamberSystemForSet( C, Jcell, K );
-                    LcapJcell := CellOfChamberSystem( C, x, Intersection(L, J) );
+                    LcapJcell := CellOfChamberSystem( C, x, Intersection(L, J) )!.elements;
                     LcapJ_LcapKcell := CellOfChamberSystemForSet( C, LcapJcell,
                                                     Intersection(L, K) );
                     if Size( Intersection(Lcell, JKcell) )
@@ -435,7 +437,7 @@ InstallMethod( IncidenceStructureOfChamberSystem, [ IsChamberSystem ],
         covered := [];
         for x in C!.elements do
             if not x in covered then
-                iobj := ObjectOfChamberSystem( C, x, i );
+                iobj := ObjectOfChamberSystem( C, x, i )!.elements;
                 Add( Objects, [ i, iobj ] );
                 covered := Union( covered, iobj );
             fi;
@@ -621,3 +623,15 @@ InstallMethod( TwistingCosetChamberSystem, [IsCosetChamberSystem, IsCosetChamber
     od;
     return CosetChamberSystem( G, B, new_subgroups, [1 .. Size(new_types)] );
 end );
+
+
+
+#############################################################################
+## TODO
+## Diagram of a chamber system
+
+
+
+
+
+
